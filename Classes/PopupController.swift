@@ -98,7 +98,7 @@ open class PopupController: UIViewController {
     }
     
     deinit {
-        self.removeFromParent()
+      self.removeFromParentViewController()
     }
     
     // MARK: Overrides
@@ -127,9 +127,9 @@ public extension PopupController {
         let controller = PopupController()
         controller.defaultConfigure()
         
-        parentViewController.addChild(controller)
+      parentViewController.addChildViewController(controller)
         parentViewController.view.addSubview(controller.view)
-        controller.didMove(toParent: parentViewController)
+      controller.didMove(toParentViewController: parentViewController)
         
         return controller
     }
@@ -140,11 +140,11 @@ public extension PopupController {
 
     @discardableResult
     func show(_ childViewController: UIViewController) -> PopupController {
-        self.addChild(childViewController)
+      self.addChildViewController(childViewController)
         popupView = childViewController.view
         configure()
         
-        childViewController.didMove(toParent: self)
+      childViewController.didMove(toParentViewController: self)
         
         show(layout, animation: animation) {
             self.defaultContentOffset = self.baseScrollView.contentOffset
@@ -196,9 +196,9 @@ private extension PopupController {
     }
     
     func registerNotification() {
-        NotificationCenter.default.addObserver(self, selector: #selector(PopupController.popupControllerWillShowKeyboard(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(PopupController.popupControllerWillHideKeyboard(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(PopupController.popupControllerDidHideKeyboard(_:)), name: UIResponder.keyboardDidHideNotification, object: nil)
+      NotificationCenter.default.addObserver(self, selector: #selector(PopupController.popupControllerWillShowKeyboard(_:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+      NotificationCenter.default.addObserver(self, selector: #selector(PopupController.popupControllerWillHideKeyboard(_:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+      NotificationCenter.default.addObserver(self, selector: #selector(PopupController.popupControllerDidHideKeyboard(_:)), name: NSNotification.Name.UIKeyboardDidHide, object: nil)
     }
     
     func unregisterNotification() {
@@ -238,7 +238,7 @@ private extension PopupController {
     }
     
     func updateLayouts() {
-        guard let child = self.children.last as? PopupContentViewController else { return }
+      guard let child = self.childViewControllers.last as? PopupContentViewController else { return }
         popupView.frame.size = child.sizeForPopup(self, size: maximumSize, showingKeyboard: isShowingKeyboard)
         popupView.frame.origin.x = layout.origin(popupView).x
         baseScrollView.frame = view.frame
@@ -264,7 +264,7 @@ private extension PopupController {
     
     @objc func popupControllerWillShowKeyboard(_ notification: Notification) {
         self.isShowingKeyboard = true
-        guard let obj = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else {
+      guard let obj = notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue else {
             return
         }
         
@@ -297,16 +297,16 @@ private extension PopupController {
         popupView.endEditing(true)
         popupView.removeFromSuperview()
         
-        children.forEach { $0.removeFromParent() }
+      childViewControllers.forEach { $0.removeFromParentViewController() }
         
         view.isHidden = true
         self.closedHandler?(self)
         
-        self.removeFromParent()
+      self.removeFromParentViewController()
     }
     
     func show(_ layout: PopupLayout, animation: PopupAnimation, completion: @escaping PopupAnimateCompletion) {
-        guard let childViewController = children.last as? PopupContentViewController else {
+      guard let childViewController = childViewControllers.last as? PopupContentViewController else {
             return
         }
 
@@ -330,7 +330,7 @@ private extension PopupController {
     }
     
     func hide(_ animation: PopupAnimation, completion: @escaping PopupAnimateCompletion) {
-        guard let child = children.last as? PopupContentViewController else {
+      guard let child = childViewControllers.last as? PopupContentViewController else {
             return
         }
         
@@ -364,7 +364,7 @@ private extension PopupController {
     }
     
     func move(_ origin: CGPoint) {
-        guard let child = children.last as? PopupContentViewController else {
+      guard let child = childViewControllers.last as? PopupContentViewController else {
             return
         }
         popupView.frame.size = child.sizeForPopup(self, size: maximumSize, showingKeyboard: isShowingKeyboard)
@@ -374,7 +374,7 @@ private extension PopupController {
     }
     
     func back() {
-        guard let child = children.last as? PopupContentViewController else {
+      guard let child = childViewControllers.last as? PopupContentViewController else {
             return
         }
         popupView.frame.size = child.sizeForPopup(self, size: maximumSize, showingKeyboard: isShowingKeyboard)
